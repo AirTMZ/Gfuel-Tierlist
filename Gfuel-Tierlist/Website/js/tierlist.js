@@ -39,14 +39,27 @@ async function fetchFlavors() {
 
 // Add this function after fetchFlavors()
 async function checkUrlForCode() {
-  // Get the path from the URL (everything after the domain)
+  // Get the full path from the URL
   const path = window.location.pathname;
 
-  // Check if the path is more than just "/"
-  if (path && path.length > 1) {
-    // Extract the code (remove leading slash)
-    const code = path.substring(1);
+  // Try to extract code from multiple URL patterns
+  let code = null;
 
+  // Pattern 1: domain.com/{code}
+  const directCodeMatch = path.match(/\/([^\/]+)\/?$/);
+
+  // Pattern 2: github.io/Gfuel-Tierlist/Gfuel-Tierlist/Website/{code}
+  const githubPagesMatch = path.match(/\/Gfuel-Tierlist\/Gfuel-Tierlist\/Website\/([^\/]+)\/?$/);
+
+  if (directCodeMatch && directCodeMatch[1] &&
+      !['Gfuel-Tierlist', 'Website', 'index.html', 'index'].includes(directCodeMatch[1])) {
+    code = directCodeMatch[1];
+  } else if (githubPagesMatch && githubPagesMatch[1]) {
+    code = githubPagesMatch[1];
+  }
+
+  // If we found a code, try to load it
+  if (code) {
     try {
       document.getElementById("inputCode").value = code;
       await loadFromCode();
@@ -386,15 +399,13 @@ function goBack() {
 document.addEventListener("DOMContentLoaded", async function() {
   await fetchFlavors();
 
-  // Check for a redirect from 404.html
-  const redirectPath = sessionStorage.getItem('redirectPath');
-  if (redirectPath) {
-    sessionStorage.removeItem('redirectPath');
-    const code = redirectPath.substring(1); // Remove leading slash
-    if (code) {
-      document.getElementById("inputCode").value = code;
-      await loadFromCode();
-    }
+  // Check for a redirect code from 404.html
+  const redirectedCode = sessionStorage.getItem('tierListCode');
+  if (redirectedCode && redirectedCode !== 'Gfuel-Tierlist' &&
+      redirectedCode !== 'Website' && redirectedCode !== 'index.html') {
+    sessionStorage.removeItem('tierListCode');
+    document.getElementById("inputCode").value = redirectedCode;
+    await loadFromCode();
   } else {
     // Regular direct URL check
     await checkUrlForCode();

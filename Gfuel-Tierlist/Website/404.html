@@ -5,11 +5,24 @@
   <meta charset="utf-8">
   <title>Redirecting...</title>
   <script>
-    console.log("here");
-    // Preserve the original URL path for our client-side router
-    sessionStorage.setItem('redirectPath', window.location.pathname);
+    // Save the path including the code
+    const path = window.location.pathname;
+    const segments = path.split('/');
+    const potentialCode = segments[segments.length - 1];
+
+    // Store it for retrieval
+    sessionStorage.setItem('tierListCode', potentialCode);
+
+    // Determine the correct base URL to redirect to
+    let baseUrl = '';
+    if (path.includes('/Gfuel-Tierlist/')) {
+      baseUrl = '/Gfuel-Tierlist/Gfuel-Tierlist/Website/';
+    } else {
+      baseUrl = '/';
+    }
+
     // Redirect to the main page
-    window.location.href = '/';
+    window.location.href = baseUrl;
   </script>
 </head>
 
