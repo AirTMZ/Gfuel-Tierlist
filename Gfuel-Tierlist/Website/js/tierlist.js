@@ -37,6 +37,30 @@ async function fetchFlavors() {
   renderTierList();
 }
 
+// Add this function after fetchFlavors()
+async function checkUrlForCode() {
+  // Get the path from the URL (everything after the domain)
+  const path = window.location.pathname;
+
+  // Check if the path is more than just "/"
+  if (path && path.length > 1) {
+    // Extract the code (remove leading slash)
+    const code = path.substring(1);
+
+    try {
+      document.getElementById("inputCode").value = code;
+      await loadFromCode();
+    } catch (error) {
+      console.error("Error loading code from URL:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Code',
+        text: 'The code in the URL could not be loaded correctly.'
+      });
+    }
+  }
+}
+
 // Load a previously saved tier list from a code
 async function loadFromCode() {
   const inputCode = document.getElementById("inputCode").value;
@@ -359,4 +383,20 @@ function goBack() {
 }
 
 // Start by fetching flavors
-document.addEventListener("DOMContentLoaded", fetchFlavors);
+document.addEventListener("DOMContentLoaded", async function() {
+  await fetchFlavors();
+
+  // Check for a redirect from 404.html
+  const redirectPath = sessionStorage.getItem('redirectPath');
+  if (redirectPath) {
+    sessionStorage.removeItem('redirectPath');
+    const code = redirectPath.substring(1); // Remove leading slash
+    if (code) {
+      document.getElementById("inputCode").value = code;
+      await loadFromCode();
+    }
+  } else {
+    // Regular direct URL check
+    await checkUrlForCode();
+  }
+});
